@@ -1,0 +1,24 @@
+﻿<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PRINCESS HOTELS: DEPARTAMENTO DE COMPRAS - FICHAS TÉCNICAS</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  <script>
+  (function () {
+    const password = "Princess2024";
+    const userInput = prompt("Introduce la contraseña:");
+    if (userInput !== password) {
+      document.body.innerHTML = "<div style='font-family:Arial,sans-serif;padding:40px;text-align:center;'><h1>Acceso denegado</h1></div>";
+      throw new Error("Acceso denegado");
+    }
+  })();
+</script>
+</body>
+</html>
+
