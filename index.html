@@ -704,6 +704,7 @@
     if (USERS[user] && USERS[user] === pass) {
       sessionStorage.setItem('auth', '1');
       document.getElementById('loginOverlay').classList.add('hidden');
+      cargarEstadisticas();
     } else {
       document.getElementById('loginError').style.display = 'block';
     }
@@ -987,3 +988,4 @@
 </div>
 </body>
 </html>
+
