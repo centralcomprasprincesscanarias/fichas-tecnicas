@@ -1,0 +1,35 @@
+{
+  "name": "Fichas Técnicas - Princess Hotels & Resorts",
+  "short_name": "Fichas Técnicas",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#faf8f5",
+  "theme_color": "#b8924a",
+  "description": "Acceso a fichas técnicas de Princess Hotels & Resorts",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
