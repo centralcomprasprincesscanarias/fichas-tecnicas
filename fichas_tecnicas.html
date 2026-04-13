@@ -5,6 +5,7 @@
   <link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAADvElEQVR4nMWXS29bRRSAv5m5c69fbdK6iYmSLtK6KCKUSGWH1F+B4HeBxKoV7EGAAIlFVcSmSqhQW1VOwiIJeZQ8m8Zvx/G9vjMs4muSJnbsyqVndR+ac77zmjMjrLWWdyjyTRYtLCxgjGEQ6G8E8ODBQ54+fYYQYIz5/wFc1+OXn3+lUqkgpSTKorWWfjPaF0CkPJVKks8XeP48d+q7EAIhxNsDEELQbDYpFIq4rmZtbf0UwPLyyplvAwOIFPq+z2GtTiwWY31tnVKphJTHahbmF1leXnk7AJGUSmXq9UO01pRLFf5eWW2HfXt7h0q50pe+rgDneREEPmF4XPnKUczOzmGtJQgC9vf3KZXKAD3XQleASMlJEM/zUEphrUUph3y+iBCQy82Tzxeo1WpYawcDUK1W2yBRv2utUUphjMFxFOVymcXFv/jnxSZCCGq1Go1G4wx4XwCRsVxunvv3vqZarba99jwPrXVbuZSSx4//ZHNzC601Usp2UfYShXMBooVTU1MsLa3w5RdfsbS0hBCCer1OEARIITHG4Hkea6sb7O7uoZQiHo/juu6FhnsCGBq6zMTEOMViifv3vuHJk2ekUinCMITXnJPyGCiZSgIDaENjDEopZmZuY60lFovz4w8/MTf3B0NDlwnDkJMRjgovyr94nbCDOJ1+RFHI3sq2QyqE4LeHv+O6XmsGnF0TNsPWS0/2O0cgApiYGOe9sQy+76OUQkpFEATnFpgQgiAIjlPUo/S0EaXTV1qd8d/QOWv8OG2JROLUhBwIwMxHM63nbnEVhGHIjRuTCCEGAxB5OnljkuHhYZrNZtfethZkn9PlQgBrLclkguvXxwmCoItxi5SSK1evDg4gUgxw6/0sxpiOEbDW4rqasbGxNvxAANrtmL1JLOZ1PANKKfF9n53tnVPgAwGw1jIyMkI2e5NGo9GGEkIgpWwPq6OjBq7ntk7MAzyQRLvch7enCVtpMMZQr9ePp99RA6UUd+9+wvT0B0gpUUr1BCD6uZg0Gj7FYoF4PIGUglKpzGGthuM4SOWAgK2tLXzf5+M7d7h0KXXh2aDjVnyeeJ5LJpOhUCiwsbHFq1cHFApFyuUyu3t7HBzkCUNDtVrl5ct9Pv/s08EAWGsJw5Dc/AKPHs2ysfGC2uFha2O0SKnQWqO1JplM4GpNJjPak1MXpiDyYHV1jW+/+x7HcRgZuUY8FiO0huGhYTCW9LU08ViM0cwoWmvS6d72g55roJ9zXj/Scw2cNN7tCnayRXvS+66v5/8CdsnkzEK04NoAAAAASUVORK5CYII=">
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' https://ifiwuloipapsezmssyda.supabase.co https://fonts.googleapis.com https://fonts.gstatic.com data: blob:">
 <title>Fichas Técnicas – Compras Canarias</title>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -703,6 +704,7 @@
     if (USERS[user] && USERS[user] === pass) {
       sessionStorage.setItem('auth', '1');
       document.getElementById('loginOverlay').classList.add('hidden');
+      cargarEstadisticas();
     } else {
       document.getElementById('loginError').style.display = 'block';
     }
@@ -931,22 +933,24 @@
   // ESTADISTICAS
   async function cargarEstadisticas() {
     try {
-      const resp = await fetch(`${SUPABASE_URL}/rest/v1/articulos?select=url_ficha_tecnica`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'count=exact', 'Range': '0-0' }
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/estadisticas`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': SUPABASE_KEY,
+          'Authorization': `Bearer ${SUPABASE_KEY}`
+        },
+        body: JSON.stringify({})
       });
-      const total = parseInt(resp.headers.get('Content-Range')?.split('/')[1] || 0);
-
-      const resp2 = await fetch(`${SUPABASE_URL}/rest/v1/articulos?select=url_ficha_tecnica&url_ficha_tecnica=not.is.null`, {
-        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Prefer': 'count=exact', 'Range': '0-0' }
-      });
-      const conFicha = parseInt(resp2.headers.get('Content-Range')?.split('/')[1] || 0);
-
+      const data = await res.json();
+      const total    = data.total    || 0;
+      const conFicha = data.con_ficha || 0;
       const pct = total > 0 ? ((conFicha / total) * 100).toFixed(1) : 0;
 
-      document.getElementById('statTotal').textContent = total.toLocaleString('es-ES');
+      document.getElementById('statTotal').textContent  = total.toLocaleString('es-ES');
       document.getElementById('statFichas').textContent = conFicha.toLocaleString('es-ES');
-      document.getElementById('statPct').textContent = pct + '%';
-      document.getElementById('pctLabel').textContent = pct + '%';
+      document.getElementById('statPct').textContent    = pct + '%';
+      document.getElementById('pctLabel').textContent   = pct + '%';
       document.getElementById('progressFill').style.width = pct + '%';
     } catch(e) {
       console.log('Error cargando estadísticas', e);
@@ -984,4 +988,3 @@
 </div>
 </body>
 </html>
-
