@@ -380,8 +380,14 @@
   ═══════════════════════════════════════ */
   .search-wrap {
     max-width: 680px;
-    margin: 28px auto 0;
-    padding: 0 24px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    position: sticky;
+    top: 80px;
+    z-index: 50;
+    background: var(--light);
+    border-bottom: 1px solid var(--border-lt);
+    box-shadow: 0 2px 8px rgba(28,24,20,0.06);
   }
   .search-box {
     position: relative;
@@ -1208,15 +1214,16 @@
          </div>`
       : `<div class="card-no-ficha">Sin ficha técnica disponible</div>`;
 
-    const dali = art.codigo_dali ? `<span class="badge badge-dali">DALI ${escapeHtml(art.codigo_dali)}</span>` : '';
-    const sap  = art.codigo_sap  ? `<span class="badge badge-sap">SAP ${escapeHtml(art.codigo_sap)}</span>` : '';
+    const dali = (art.codigo_dali || art.dali) ? `<span class="badge badge-dali">DALI ${escapeHtml(art.codigo_dali || art.dali)}</span>` : '';
+    const sap  = (art.codigo_sap  || art.sap)  ? `<span class="badge badge-sap">SAP ${escapeHtml(art.codigo_sap  || art.sap)}</span>`  : '';
     const prov = art.proveedor   ? `<span class="badge badge-prov">${escapeHtml(art.proveedor)}</span>` : '';
+    const codProv = art.codigo_proveedor ? `<span class="badge" style="background:#f0f4ff;color:#4a5568;border:1px solid #c9d6f0;font-size:10.5px;">COD ${escapeHtml(art.codigo_proveedor)}</span>` : '';
 
     const encoded = encodeURIComponent(JSON.stringify(art));
 
     return `<div class="card" onclick="abrirModalDesdeCadena('${encoded}')">
       <div class="card-desc">${escapeHtml(art.descripcion || 'Sin descripción')}</div>
-      <div class="card-codes">${dali}${sap}${prov}</div>
+      <div class="card-codes">${dali}${sap}${prov}${codProv}</div>
       ${ficha}
     </div>`;
   }
@@ -1235,9 +1242,10 @@
 
     const meta = document.getElementById('modalMeta');
     meta.innerHTML = '';
-    if (art.codigo_dali) meta.innerHTML += `<span class="badge badge-dali">DALI ${escapeHtml(art.codigo_dali)}</span>`;
-    if (art.codigo_sap)  meta.innerHTML += `<span class="badge badge-sap">SAP ${escapeHtml(art.codigo_sap)}</span>`;
+    if (art.codigo_dali || art.dali) meta.innerHTML += `<span class="badge badge-dali">DALI ${escapeHtml(art.codigo_dali || art.dali)}</span>`;
+    if (art.codigo_sap  || art.sap)  meta.innerHTML += `<span class="badge badge-sap">SAP ${escapeHtml(art.codigo_sap  || art.sap)}</span>`;
     if (art.proveedor)   meta.innerHTML += `<span class="badge badge-prov">${escapeHtml(art.proveedor)}</span>`;
+    if (art.codigo_proveedor) meta.innerHTML += `<span class="badge" style="background:#f0f4ff;color:#4a5568;border:1px solid #c9d6f0;">COD ${escapeHtml(art.codigo_proveedor)}</span>`;
 
     const body = document.getElementById('modalBody');
     const dlBtn = document.getElementById('modalDownload');
@@ -1278,8 +1286,8 @@
     const sinFicha = ultimoResultado.filter(item => !item.url_ficha_tecnica);
     const lineas = sinFicha.map(item => {
       const titulo = item.descripcion || '';
-      const dali = item.codigo_dali ? ` | DALI ${item.codigo_dali}` : '';
-      const sap = item.codigo_sap ? ` | SAP ${item.codigo_sap}` : '';
+      const dali = (item.codigo_dali || item.dali) ? ` | DALI ${item.codigo_dali || item.dali}` : '';
+      const sap = (item.codigo_sap || item.sap) ? ` | SAP ${item.codigo_sap || item.sap}` : '';
       return titulo ? `- ${titulo}${dali}${sap}` : '';
     }).filter(Boolean);
 
@@ -1483,17 +1491,34 @@
         <div style="font-size:11px;opacity:0.6;margin-top:4px;">Añade artículos nuevos sin borrar</div>
       </button>
 
-      <button onclick="reindexarPDFs()" style="background:rgba(176,141,87,0.12);border:1px solid rgba(176,141,87,0.3);color:#d4b483;padding:16px;border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:left;">
-        <div style="font-size:20px;margin-bottom:8px;">🔄</div>
-        <div>Reindexar PDFs</div>
-        <div style="font-size:11px;opacity:0.6;margin-top:4px;">Detecta PDFs nuevos en el bucket</div>
-      </button>
+      <div style="background:rgba(176,141,87,0.12);border:1px solid rgba(176,141,87,0.3);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:10px;">
+        <div style="font-size:20px;">🔄</div>
+        <div style="color:#d4b483;font-size:13px;font-weight:600;">Reindexar PDFs</div>
+        <select id="selectProveedor" style="background:rgba(0,0,0,0.3);border:1px solid rgba(176,141,87,0.3);color:#d4b483;padding:7px 10px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;width:100%;outline:none;">
+          <option value="">— Todos los proveedores —</option>
+        </select>
+        <button onclick="reindexarPDFs()" style="background:rgba(176,141,87,0.25);border:1px solid rgba(176,141,87,0.4);color:#d4b483;padding:8px;border-radius:8px;font-family:Outfit,sans-serif;font-size:12px;font-weight:600;cursor:pointer;">Ejecutar</button>
+      </div>
 
       <button onclick="verBackups()" style="background:rgba(176,141,87,0.12);border:1px solid rgba(176,141,87,0.3);color:#d4b483;padding:16px;border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:left;">
         <div style="font-size:20px;margin-bottom:8px;">📋</div>
         <div>Ver Historial Backups</div>
         <div style="font-size:11px;opacity:0.6;margin-top:4px;">Restaurar versión anterior</div>
       </button>
+    </div>
+
+    <!-- ESTADÍSTICAS POR PROVEEDOR -->
+    <div style="margin-bottom:20px;">
+      <button onclick="toggleProveedores()" id="btnProveedores" style="width:100%;background:rgba(176,141,87,0.08);border:1px solid rgba(176,141,87,0.2);color:#d4b483;padding:14px 18px;border-radius:12px;font-family:'Outfit',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-align:left;display:flex;justify-content:space-between;align-items:center;">
+        <span>📊 Fichas por Proveedor</span>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <span onclick="event.stopPropagation();proveedoresCargados=false;cargarEstadisticasProveedores();" title="Recargar" style="opacity:0.6;font-size:14px;cursor:pointer;">🔄</span>
+          <span id="chevronProv" style="transition:transform 0.2s;">▼</span>
+        </div>
+      </button>
+      <div id="proveedoresPanel" style="display:none;margin-top:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:12px;padding:16px;max-height:320px;overflow-y:auto;">
+        <div id="proveedoresList" style="font-size:12px;color:rgba(255,255,255,0.5);">Cargando...</div>
+      </div>
     </div>
 
     <!-- INPUT FILE OCULTO -->
@@ -1516,6 +1541,7 @@
 function abrirAdmin() {
   document.getElementById('adminOverlay').style.display = 'flex';
   cargarStatsAdmin();
+  cargarSelectProveedores();
 }
 function cerrarAdmin() {
   document.getElementById('adminOverlay').style.display = 'none';
@@ -1563,6 +1589,7 @@ async function hacerBackup() {
     if (d.ok) {
       logAdmin('✅ Backup creado - ID:' + d.id + ' (' + d.total + ' artículos)', '#4ade80');
       cargarStatsAdmin();
+  cargarSelectProveedores();
     } else {
       logAdmin('❌ Error: ' + JSON.stringify(d), '#f87171');
     }
@@ -1591,13 +1618,20 @@ async function procesarTarifa(input) {
     const MAPA_PROV = {
       'ALCRUZ': 'ALCRUZ CANARIAS', 'CASA DELFIN': 'CASA DELFIN',
       'ARGAL': 'ARGAL', 'CANONDIS': 'CANONDIS',
-      'VALSEQUILLO': 'VALSEQUILLO', 'SISTEMAS CANARIOS': 'SISTEMAS CANARIOS DE CONTROL'
+      'VALSEQUILLO': 'VALSEQUILLO', 'SISTEMAS CANARIOS': 'SISTEMAS CANARIOS DE CONTROL',
+      'BAKER': 'BAKER&BAKER', 'OASISFISH': 'OASISFISH 2026', 'EMICELA': 'EMICELA', 'COMIT': 'COMIT', 'CADELSA': 'CADELSA', 'AHUMADOS': 'AHUMADOS CANARIOS'
     };
     let proveedor = Object.entries(MAPA_PROV).find(([k]) => fname.includes(k))?.[1] || file.name.replace(/\.xlsx?$/i,'');
     logAdmin('🏢 Proveedor detectado: ' + proveedor, '#a3e635');
 
-    // Parse rows: col0=DALI, col1=CodProv numeric, col2=Desc (format A)
-    //             col0=DALI, col1=Desc (format B - CANONDIS)
+    // Detectar formato del Excel buscando cabecera CODIGO DALI
+    let formatoDALI = false;
+    for (const row of rows) {
+      const vals = row.map(v => String(v).toUpperCase().trim());
+      if (vals.some(v => v === 'CODIGO DALI' || v === 'CODIGO SAP')) { formatoDALI = true; break; }
+    }
+    if (formatoDALI) logAdmin('📋 Formato SAP/DALI/CodProv/Desc detectado', '#a3e635');
+
     const nuevos = [];
     const vistos = new Set();
 
@@ -1608,12 +1642,19 @@ async function procesarTarifa(input) {
       const isNum1 = /^\d+$/.test(ne[1]);
       if (!isNum0) continue;
 
-      let dali, codProv, desc;
-      if (isNum1 && ne.length >= 3) {
-        // Format A
+      let dali, sap, codProv, desc;
+
+      if (formatoDALI && isNum1 && ne.length >= 4) {
+        // Formato DALI: col0=SAP, col1=DALI, col2=CodProv, col3+=Desc
+        sap = ne[0];
+        dali = ne[1].padStart(8,'0');
+        codProv = ne[2];
+        desc = ne.slice(3).find(v => v && !/^\d+([.,]\d+)?$/.test(v.trim())) || ne[3] || '';
+      } else if (isNum1 && ne.length >= 3) {
+        // Format A: col0=DALI, col1=CodProv, descripcion = primera celda no numérica
         dali = ne[0].padStart(8,'0');
         codProv = ne[1];
-        desc = ne[4] || ne[2] || '';
+        desc = ne.slice(2).find(v => v && !/^\d+([.,]\d+)?$/.test(v.trim())) || ne[2] || '';
       } else if (!isNum1 && ne[1].length > 3) {
         // Format B
         dali = ne[0].padStart(8,'0');
@@ -1623,9 +1664,9 @@ async function procesarTarifa(input) {
 
       if (vistos.has(dali)) continue;
       vistos.add(dali);
-      if (desc.length > 3) {
-        nuevos.push({codigo_dali: dali, codigo_proveedor: codProv, proveedor: proveedor, descripcion: desc.toUpperCase()});
-      }
+      const art = {codigo_dali: dali, codigo_proveedor: codProv, proveedor: proveedor, descripcion: desc.toUpperCase()};
+      if (sap) art.codigo_sap = sap;
+      if (desc.length > 3) nuevos.push(art);
     }
 
     logAdmin('📋 ' + nuevos.length + ' artículos encontrados en tarifa', '#a3e635');
@@ -1651,6 +1692,7 @@ async function procesarTarifa(input) {
     await hacerBackupSilencioso('Tarifa subida: ' + file.name);
     logAdmin('✅ Backup automático creado', '#4ade80');
     cargarStatsAdmin();
+  cargarSelectProveedores();
 
   } catch(e) {
     logAdmin('❌ Error procesando Excel: ' + e.message, '#f87171');
@@ -1669,6 +1711,7 @@ async function hacerBackupSilencioso(motivo) {
 }
 
 async function reindexarPDFs() {
+  const provFiltro = document.getElementById("selectProveedor")?.value || "";
   logAdmin('🔄 Reindexando PDFs del bucket...', '#d4b483');
   try {
     // List all folders in bucket
@@ -1686,6 +1729,7 @@ async function reindexarPDFs() {
     for (const carpeta of carpetas) {
       const nombre = carpeta.name;
       if (!nombre) continue;
+      if (provFiltro && nombre !== provFiltro) continue;
       
       const r2 = await fetch(SUPABASE_URL + '/storage/v1/object/list/fichas-tecnicas', {
         method: 'POST',
@@ -1709,27 +1753,31 @@ async function reindexarPDFs() {
         if (mNuevo) {
           const daliVal = mNuevo[1];
           const sapVal  = mNuevo[2];
+          const daliPad = daliVal.padStart(8, '0');
           logAdmin('🔍 PDF nuevo formato → DALI:' + daliVal + ' SAP:' + sapVal, '#d4b483');
 
-          // Buscar por DALI (columna "dali" en Supabase)
-          const r3 = await fetch(
-            SUPABASE_URL + '/rest/v1/articulos?dali=eq.' + daliVal + '&select=id,url_ficha_tecnica',
-            { headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY} }
-          );
-          arts = await r3.json();
+          // Intentar todas las columnas posibles donde puede estar el DALI
+          const queries = [
+            'dali=eq.' + daliVal,
+            'dali=eq.' + daliPad,
+            'codigo_dali=eq.' + daliVal,
+            'codigo_dali=eq.' + daliPad,
+            'sap=eq.' + sapVal,
+            'codigo_sap=eq.' + sapVal,
+          ];
 
-          // Si no hay match por DALI, intentar por SAP (columna "sap")
-          if (!arts.length) {
-            const r4 = await fetch(
-              SUPABASE_URL + '/rest/v1/articulos?sap=eq.' + sapVal + '&select=id,url_ficha_tecnica',
+          for (const q of queries) {
+            if (arts.length) break;
+            const r3 = await fetch(
+              SUPABASE_URL + '/rest/v1/articulos?' + q + '&select=id,url_ficha_tecnica',
               { headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY} }
             );
-            arts = await r4.json();
+            const res = await r3.json();
+            if (Array.isArray(res) && res.length) arts = res;
           }
 
         } else if (mAntiguo) {
           const cod = mAntiguo[1];
-          // Formato antiguo: buscar por codigo_proveedor + carpeta proveedor
           const r3 = await fetch(
             SUPABASE_URL + '/rest/v1/articulos?codigo_proveedor=eq.' + cod + '&proveedor=eq.' + encodeURIComponent(nombre) + '&select=id,url_ficha_tecnica',
             { headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY} }
@@ -1755,7 +1803,9 @@ async function reindexarPDFs() {
     }
     
     logAdmin('✅ ' + totalPDFs + ' PDFs procesados, ' + actualizados + ' artículos actualizados', '#4ade80');
+    proveedoresCargados = false; // Forzar recarga de estadísticas por proveedor
     cargarStatsAdmin();
+  cargarSelectProveedores();
     if (actualizados > 0) {
       logAdmin('💾 Creando backup automático...', '#d4b483');
       await hacerBackupSilencioso('Reindexación PDFs - ' + actualizados + ' actualizados');
@@ -1810,10 +1860,99 @@ async function restaurarBackup(id) {
     if (d.ok) {
       logAdmin('✅ Backup restaurado - ' + d.restaurados + ' artículos', '#4ade80');
       cargarStatsAdmin();
+  cargarSelectProveedores();
     } else {
       logAdmin('❌ Error: ' + d.error, '#f87171');
     }
   } catch(e) { logAdmin('❌ Error: ' + e.message, '#f87171'); }
+}
+
+let proveedoresCargados = false;
+async function cargarSelectProveedores() {
+  const sel = document.getElementById("selectProveedor");
+  if (!sel || sel.options.length > 1) return;
+  try {
+    const r = await fetch(SUPABASE_URL + "/storage/v1/object/list/fichas-tecnicas", {
+      method: "POST",
+      headers: {"Content-Type":"application/json","apikey":SUPABASE_KEY,"Authorization":"Bearer "+SUPABASE_KEY},
+      body: JSON.stringify({prefix:"", limit:200, offset:0})
+    });
+    const carpetas = await r.json();
+    carpetas.filter(c => c.name).sort((a,b) => a.name.localeCompare(b.name)).forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      opt.textContent = c.name;
+      sel.appendChild(opt);
+    });
+  } catch(e) { console.error(e); }
+}
+
+function toggleProveedores() {
+  const panel = document.getElementById('proveedoresPanel');
+  const chevron = document.getElementById('chevronProv');
+  const abierto = panel.style.display !== 'none';
+  panel.style.display = abierto ? 'none' : 'block';
+  chevron.style.transform = abierto ? '' : 'rotate(180deg)';
+  if (!abierto && !proveedoresCargados) {
+    proveedoresCargados = true;
+    cargarEstadisticasProveedores();
+  }
+}
+
+async function cargarEstadisticasProveedores() {
+  const lista = document.getElementById('proveedoresList');
+  lista.innerHTML = '<div style="color:rgba(255,255,255,0.4);">Cargando...</div>';
+  try {
+    // Paginar para obtener todos los artículos (Supabase límite 1000 por página)
+    let data = [];
+    let offset = 0;
+    const pageSize = 1000;
+    while (true) {
+      const r = await fetch(
+        SUPABASE_URL + '/rest/v1/articulos?select=proveedor,url_ficha_tecnica&order=proveedor&limit=' + pageSize + '&offset=' + offset,
+        { headers: {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY, 'Prefer':'count=none'} }
+      );
+      const page = await r.json();
+      if (!Array.isArray(page) || !page.length) break;
+      data = data.concat(page);
+      if (page.length < pageSize) break;
+      offset += pageSize;
+    }
+
+    // Agrupar por proveedor
+    const mapa = {};
+    for (const art of data) {
+      const prov = art.proveedor || '(Sin proveedor)';
+      if (!mapa[prov]) mapa[prov] = { total: 0, conFicha: 0 };
+      mapa[prov].total++;
+      if (art.url_ficha_tecnica) mapa[prov].conFicha++;
+    }
+
+    // Ordenar por % completado descendente
+    const sorted = Object.entries(mapa).sort((a, b) => {
+      const pctA = a[1].conFicha / a[1].total;
+      const pctB = b[1].conFicha / b[1].total;
+      return pctB - pctA;
+    });
+
+    lista.innerHTML = sorted.map(([prov, s]) => {
+      const pct = Math.round((s.conFicha / s.total) * 100);
+      const barColor = pct === 100 ? '#4ade80' : pct > 50 ? '#d4b483' : '#f87171';
+      const textColor = pct === 100 ? '#4ade80' : pct > 50 ? '#d4b483' : '#f87171';
+      return `
+        <div style="margin-bottom:12px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+            <span style="color:rgba(255,255,255,0.8);font-size:12px;font-family:'Outfit',sans-serif;font-weight:500;">${prov}</span>
+            <span style="color:${textColor};font-size:11px;font-weight:600;">${s.conFicha}/${s.total} · ${pct}%</span>
+          </div>
+          <div style="height:4px;background:rgba(255,255,255,0.08);border-radius:99px;overflow:hidden;">
+            <div style="height:100%;width:${pct}%;background:${barColor};border-radius:99px;transition:width 0.6s;"></div>
+          </div>
+        </div>`;
+    }).join('');
+  } catch(e) {
+    lista.innerHTML = '<div style="color:#f87171;font-size:12px;">Error cargando datos</div>';
+  }
 }
 </script>
 
